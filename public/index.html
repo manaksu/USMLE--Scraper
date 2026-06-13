@@ -252,21 +252,29 @@
     const btn = document.getElementById(`btn-web-${i}`);
     const spin = document.getElementById(`spin-web-${i}`);
     const input = document.getElementById(`web-input-${i}`);
+    if (!btn || !input) return;
     btn.disabled = true; spin.style.display = 'inline-block';
+    input.value = '';
     input.placeholder = 'Searching…';
+    input.classList.remove('has-value');
+    input.style.borderColor = '';
     try {
       const r = await fetch('/api/website', {
         method: 'POST', headers: {'Content-Type':'application/json'},
         body: JSON.stringify({ programName: getName(i) })
       });
       const d = await r.json();
-      programs[i].website = d.website || '';
-      input.value = programs[i].website;
-      input.placeholder = 'Auto or paste…';
-      input.classList.toggle('has-value', !!programs[i].website);
-      document.getElementById(`btn-res-${i}`).disabled = !programs[i].website;
-    } catch {
-      input.placeholder = 'Error — try again';
+      const url = d.website || '';
+      programs[i].website = url;
+      input.value = url;
+      input.placeholder = url ? 'Auto or paste…' : 'Not found — paste manually';
+      input.classList.toggle('has-value', !!url);
+      input.style.borderColor = url ? '#9ae6b4' : '#feb2b2';
+      const resBtn = document.getElementById(`btn-res-${i}`);
+      if (resBtn) resBtn.disabled = !url;
+    } catch(e) {
+      input.placeholder = 'Error — paste manually';
+      input.style.borderColor = '#feb2b2';
     }
     btn.disabled = false; spin.style.display = 'none';
   }
