@@ -100,7 +100,7 @@ module.exports = async function handler(req, res) {
   if (req.method === "OPTIONS") return res.status(200).end();
   if (req.method !== "POST") return res.status(405).end();
 
-  const apiKey = process.env.ANTHROPIC_API_KEY;
+  const apiKey = (process.env.ANTHROPIC_API_KEY || "").trim();
   if (!apiKey) return res.status(500).json({ error: "ANTHROPIC_API_KEY not set in Vercel environment variables" });
 
   const body = await parseBody(req);
