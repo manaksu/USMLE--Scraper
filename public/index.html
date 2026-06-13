@@ -8,36 +8,66 @@
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      background: #eef2f7;
-      min-height: 100vh;
-      display: flex; align-items: center; justify-content: center;
-      padding: 24px;
+      background: #eef2f7; min-height: 100vh;
+      display: flex; align-items: flex-start; justify-content: center;
+      padding: 40px 24px;
     }
     .card {
-      background: white; border-radius: 18px; padding: 44px 40px;
-      width: 100%; max-width: 580px;
+      background: white; border-radius: 18px; padding: 40px;
+      width: 100%; max-width: 640px;
       box-shadow: 0 8px 32px rgba(0,0,0,0.08);
     }
-    .icon { font-size: 2rem; margin-bottom: 14px; }
+    .icon { font-size: 2rem; margin-bottom: 12px; }
     h1 { font-size: 1.35rem; font-weight: 700; color: #1a202c; margin-bottom: 6px; }
     .sub { color: #718096; font-size: 0.88rem; margin-bottom: 28px; line-height: 1.5; }
+
+    /* Tabs */
+    .tabs { display: flex; gap: 4px; margin-bottom: 24px; background: #f0f4f8; border-radius: 10px; padding: 4px; }
+    .tab {
+      flex: 1; padding: 9px; border: none; background: none;
+      border-radius: 7px; font-size: 0.88rem; font-weight: 600;
+      color: #718096; cursor: pointer; transition: all 0.15s;
+    }
+    .tab.active { background: white; color: #2b6cb0; box-shadow: 0 1px 4px rgba(0,0,0,0.1); }
+
+    /* Panels */
+    .panel { display: none; }
+    .panel.active { display: block; }
+
     label { display: block; font-size: 0.8rem; font-weight: 600; color: #4a5568; margin-bottom: 7px; letter-spacing: 0.04em; text-transform: uppercase; }
-    input {
+    input[type="text"], input[type="url"] {
       width: 100%; padding: 13px 15px;
       border: 2px solid #e2e8f0; border-radius: 10px;
       font-size: 0.95rem; color: #2d3748; outline: none;
       transition: border-color 0.15s;
     }
     input:focus { border-color: #4299e1; }
-    button {
+
+    /* File upload */
+    .upload-area {
+      border: 2px dashed #cbd5e0; border-radius: 10px;
+      padding: 32px; text-align: center; cursor: pointer;
+      transition: border-color 0.15s; color: #718096;
+    }
+    .upload-area:hover, .upload-area.drag { border-color: #4299e1; background: #ebf8ff; }
+    .upload-area .upload-icon { font-size: 2rem; margin-bottom: 8px; }
+    .upload-area p { font-size: 0.88rem; }
+    .upload-area strong { color: #2b6cb0; }
+    .file-hint { font-size: 0.78rem; color: #a0aec0; margin-top: 10px; }
+
+    /* Button */
+    .btn {
       margin-top: 14px; width: 100%; padding: 13px;
       background: #2b6cb0; color: white; border: none;
       border-radius: 10px; font-size: 1rem; font-weight: 600;
       cursor: pointer; transition: background 0.15s;
       display: flex; align-items: center; justify-content: center; gap: 8px;
     }
-    button:hover:not(:disabled) { background: #2c5282; }
-    button:disabled { background: #a0aec0; cursor: not-allowed; }
+    .btn:hover:not(:disabled) { background: #2c5282; }
+    .btn:disabled { background: #a0aec0; cursor: not-allowed; }
+    .btn.green { background: #276749; }
+    .btn.green:hover:not(:disabled) { background: #22543d; }
+
     .spinner {
       width: 16px; height: 16px;
       border: 2.5px solid rgba(255,255,255,0.4);
@@ -45,102 +75,245 @@
       animation: spin 0.7s linear infinite; display: none;
     }
     @keyframes spin { to { transform: rotate(360deg); } }
-    .results { margin-top: 22px; display: flex; flex-direction: column; gap: 12px; }
-    .result-row {
-      padding: 16px 18px; border-radius: 10px;
-      display: none;
-    }
+
+    /* Single results */
+    .results { margin-top: 20px; display: flex; flex-direction: column; gap: 10px; }
+    .result-row { padding: 14px 16px; border-radius: 10px; display: none; }
     .ok  { background: #f0fff4; border: 1.5px solid #9ae6b4; }
     .err { background: #fff5f5; border: 1.5px solid #feb2b2; color: #742a2a; }
     .tag { font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: #718096; margin-bottom: 5px; }
     a { color: #2b6cb0; word-break: break-all; font-weight: 500; font-size: 0.9rem; }
+
+    /* Batch progress */
+    .progress-wrap { margin-top: 20px; display: none; }
+    .progress-label { font-size: 0.85rem; color: #4a5568; margin-bottom: 8px; display: flex; justify-content: space-between; }
+    .progress-bar { background: #e2e8f0; border-radius: 99px; height: 8px; overflow: hidden; }
+    .progress-fill { background: #2b6cb0; height: 100%; border-radius: 99px; transition: width 0.3s; width: 0%; }
+    .batch-log {
+      margin-top: 14px; background: #f7fafc; border-radius: 10px;
+      padding: 12px 14px; max-height: 200px; overflow-y: auto;
+      font-size: 0.82rem; color: #4a5568; line-height: 1.7;
+    }
+    .log-ok { color: #276749; }
+    .log-err { color: #c53030; }
   </style>
 </head>
 <body>
 <div class="card">
   <div class="icon">🏥</div>
   <h1>FM Residency Finder</h1>
-  <p class="sub">Paste any hospital website — finds the Family Medicine Residency page and the Apply link.</p>
+  <p class="sub">Find Family Medicine Residency pages and Apply links from hospital websites.</p>
 
-  <label for="url">Hospital Website</label>
-  <input id="url" type="url" placeholder="https://www.hospital.org" />
-  <button id="btn" onclick="find()">
-    <div class="spinner" id="spin"></div>
-    <span id="btn-text">Find FM Residency Page</span>
-  </button>
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab('single')">Single URL</button>
+    <button class="tab" onclick="switchTab('batch')">Upload File</button>
+  </div>
 
-  <div class="results">
-    <div class="result-row" id="row-fm">
-      <div class="tag">FM Residency Page</div>
-      <a id="link-fm" href="#" target="_blank"></a>
+  <!-- Single URL -->
+  <div class="panel active" id="panel-single">
+    <label for="url">Hospital Website</label>
+    <input id="url" type="url" placeholder="https://www.hospital.org" />
+    <button class="btn" id="btn-single" onclick="findSingle()">
+      <div class="spinner" id="spin-single"></div>
+      <span id="label-single">Find FM Residency Page</span>
+    </button>
+    <div class="results">
+      <div class="result-row" id="row-fm">
+        <div class="tag">FM Residency Page</div>
+        <a id="link-fm" href="#" target="_blank"></a>
+      </div>
+      <div class="result-row" id="row-apply">
+        <div class="tag">How to Apply</div>
+        <a id="link-apply" href="#" target="_blank"></a>
+      </div>
+      <div class="result-row err" id="row-err">
+        <div class="tag">Error</div>
+        <span id="err-msg"></span>
+      </div>
     </div>
-    <div class="result-row" id="row-apply">
-      <div class="tag">How to Apply</div>
-      <a id="link-apply" href="#" target="_blank"></a>
+  </div>
+
+  <!-- Batch Upload -->
+  <div class="panel" id="panel-batch">
+    <label>Upload File</label>
+    <div class="upload-area" id="upload-area" onclick="document.getElementById('file-input').click()"
+         ondragover="event.preventDefault();this.classList.add('drag')"
+         ondragleave="this.classList.remove('drag')"
+         ondrop="handleDrop(event)">
+      <div class="upload-icon">📄</div>
+      <p><strong>Click to upload</strong> or drag and drop</p>
+      <p class="file-hint">CSV or TXT — one URL per line, or a CSV with a column named "url" or "website"</p>
     </div>
-    <div class="result-row err" id="row-err">
-      <div class="tag">Error</div>
-      <span id="err-msg"></span>
+    <input type="file" id="file-input" accept=".csv,.txt" style="display:none" onchange="handleFile(this.files[0])" />
+    <div id="file-name" style="font-size:0.82rem;color:#718096;margin-top:8px;"></div>
+
+    <button class="btn" id="btn-batch" onclick="runBatch()" disabled>
+      <div class="spinner" id="spin-batch"></div>
+      <span id="label-batch">Process File</span>
+    </button>
+
+    <div class="progress-wrap" id="progress-wrap">
+      <div class="progress-label">
+        <span id="progress-text">Processing...</span>
+        <span id="progress-count"></span>
+      </div>
+      <div class="progress-bar"><div class="progress-fill" id="progress-fill"></div></div>
+      <div class="batch-log" id="batch-log"></div>
     </div>
+
+    <button class="btn green" id="btn-download" style="display:none;margin-top:14px" onclick="downloadCSV()">
+      ⬇ Download Results CSV
+    </button>
   </div>
 </div>
 
 <script>
-  async function find() {
-    const url = document.getElementById('url').value.trim();
-    if (!url) return;
+  let parsedUrls = [];
+  let batchResults = [];
 
-    const btn = document.getElementById('btn');
-    const spin = document.getElementById('spin');
-    const label = document.getElementById('btn-text');
-
-    // Hide previous results
-    ['row-fm','row-apply','row-err'].forEach(id => document.getElementById(id).style.display = 'none');
-
-    btn.disabled = true;
-    spin.style.display = 'block';
-    label.textContent = 'Searching...';
-
-    try {
-      const r = await fetch('/api/find', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ url })
-      });
-      const d = await r.json();
-
-      if (d.error && !d.fmLink) {
-        document.getElementById('err-msg').textContent = d.error;
-        document.getElementById('row-err').style.display = 'block';
-      } else {
-        if (d.fmLink) {
-          document.getElementById('link-fm').href = d.fmLink;
-          document.getElementById('link-fm').textContent = d.fmLink;
-          document.getElementById('row-fm').style.display = 'block';
-        }
-        if (d.applyLink) {
-          document.getElementById('link-apply').href = d.applyLink;
-          document.getElementById('link-apply').textContent = d.applyLink;
-          document.getElementById('row-apply').style.display = 'block';
-        }
-        if (!d.fmLink) {
-          document.getElementById('err-msg').textContent = 'No FM Residency link found. Try their GME or Residency section directly.';
-          document.getElementById('row-err').style.display = 'block';
-        }
-      }
-    } catch (e) {
-      document.getElementById('err-msg').textContent = e.message;
-      document.getElementById('row-err').style.display = 'block';
-    }
-
-    btn.disabled = false;
-    spin.style.display = 'none';
-    label.textContent = 'Find FM Residency Page';
+  function switchTab(tab) {
+    document.querySelectorAll('.tab').forEach((t,i) => t.classList.toggle('active', (i===0) === (tab==='single')));
+    document.getElementById('panel-single').classList.toggle('active', tab==='single');
+    document.getElementById('panel-batch').classList.toggle('active', tab==='batch');
   }
 
-  document.getElementById('url').addEventListener('keydown', e => {
-    if (e.key === 'Enter') find();
-  });
+  // ── Single ──────────────────────────────────────────────────────
+  async function findSingle() {
+    const url = document.getElementById('url').value.trim();
+    if (!url) return;
+    setLoading('single', true);
+    ['row-fm','row-apply','row-err'].forEach(id => document.getElementById(id).style.display='none');
+    try {
+      const d = await callFind(url);
+      if (d.error && !d.fmLink) { showErr(d.error); }
+      else {
+        if (d.fmLink) showRow('row-fm','link-fm', d.fmLink);
+        if (d.applyLink) showRow('row-apply','link-apply', d.applyLink);
+        if (!d.fmLink) showErr('No FM Residency link found. Try their GME or Residency section.');
+      }
+    } catch(e) { showErr(e.message); }
+    setLoading('single', false);
+  }
+
+  function showRow(rowId, linkId, url) {
+    document.getElementById(linkId).href = url;
+    document.getElementById(linkId).textContent = url;
+    document.getElementById(rowId).style.display = 'block';
+  }
+  function showErr(msg) {
+    document.getElementById('err-msg').textContent = msg;
+    document.getElementById('row-err').style.display = 'block';
+  }
+  function setLoading(which, on) {
+    document.getElementById('btn-'+which).disabled = on;
+    document.getElementById('spin-'+which).style.display = on ? 'block' : 'none';
+    document.getElementById('label-'+which).textContent = on ? 'Searching...' : (which==='single' ? 'Find FM Residency Page' : 'Process File');
+  }
+
+  // ── File handling ───────────────────────────────────────────────
+  function handleDrop(e) {
+    e.preventDefault();
+    document.getElementById('upload-area').classList.remove('drag');
+    const file = e.dataTransfer.files[0];
+    if (file) handleFile(file);
+  }
+
+  function handleFile(file) {
+    if (!file) return;
+    document.getElementById('file-name').textContent = '📎 ' + file.name;
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const text = e.target.result;
+      parsedUrls = parseUrls(text, file.name.endsWith('.csv'));
+      document.getElementById('btn-batch').disabled = parsedUrls.length === 0;
+      document.getElementById('file-name').textContent = `📎 ${file.name} — ${parsedUrls.length} URL(s) found`;
+    };
+    reader.readAsText(file);
+  }
+
+  function parseUrls(text, isCsv) {
+    const lines = text.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+    if (!isCsv) return lines.filter(l => l.startsWith('http'));
+
+    // CSV: find column named url/website/link
+    const headers = lines[0].split(',').map(h => h.toLowerCase().replace(/['"]/g,'').trim());
+    const col = headers.findIndex(h => ['url','website','link','site'].includes(h));
+    if (col === -1) return lines.slice(1).map(l => l.split(',')[0].replace(/['"]/g,'').trim()).filter(l => l.startsWith('http'));
+    return lines.slice(1).map(l => {
+      const cells = l.split(',');
+      return (cells[col] || '').replace(/['"]/g,'').trim();
+    }).filter(l => l.startsWith('http'));
+  }
+
+  // ── Batch run ───────────────────────────────────────────────────
+  async function runBatch() {
+    if (!parsedUrls.length) return;
+    batchResults = [];
+    setLoading('batch', true);
+    document.getElementById('btn-download').style.display = 'none';
+    document.getElementById('progress-wrap').style.display = 'block';
+    document.getElementById('batch-log').innerHTML = '';
+
+    const total = parsedUrls.length;
+    for (let i = 0; i < total; i++) {
+      const url = parsedUrls[i];
+      updateProgress(i, total, url);
+      try {
+        const d = await callFind(url);
+        batchResults.push({ url, fmLink: d.fmLink||'', applyLink: d.applyLink||'', error: d.error||'' });
+        addLog(url, d.fmLink, d.applyLink, d.error);
+      } catch(e) {
+        batchResults.push({ url, fmLink:'', applyLink:'', error: e.message });
+        addLog(url, null, null, e.message);
+      }
+    }
+
+    updateProgress(total, total, 'Done');
+    setLoading('batch', false);
+    document.getElementById('label-batch').textContent = 'Process File';
+    document.getElementById('btn-download').style.display = 'block';
+  }
+
+  function updateProgress(done, total, current) {
+    const pct = Math.round((done/total)*100);
+    document.getElementById('progress-fill').style.width = pct+'%';
+    document.getElementById('progress-text').textContent = done < total ? `Processing: ${current}` : 'Complete!';
+    document.getElementById('progress-count').textContent = `${done} / ${total}`;
+  }
+
+  function addLog(url, fmLink, applyLink, error) {
+    const log = document.getElementById('batch-log');
+    const domain = (() => { try { return new URL(url).hostname; } catch { return url; } })();
+    if (error && !fmLink) {
+      log.innerHTML += `<div class="log-err">✗ ${domain} — ${error}</div>`;
+    } else {
+      log.innerHTML += `<div class="log-ok">✓ ${domain} — FM: ${fmLink ? 'found' : 'not found'} | Apply: ${applyLink ? 'found' : 'not found'}</div>`;
+    }
+    log.scrollTop = log.scrollHeight;
+  }
+
+  // ── Download CSV ────────────────────────────────────────────────
+  function downloadCSV() {
+    const rows = [['Hospital URL','FM Residency Page','How to Apply','Error']];
+    batchResults.forEach(r => rows.push([r.url, r.fmLink, r.applyLink, r.error]));
+    const csv = rows.map(r => r.map(c => `"${(c||'').replace(/"/g,'""')}"`).join(',')).join('\n');
+    const a = document.createElement('a');
+    a.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv);
+    a.download = 'fm-residency-results.csv';
+    a.click();
+  }
+
+  // ── API call ────────────────────────────────────────────────────
+  async function callFind(url) {
+    const r = await fetch('/api/find', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({url})
+    });
+    return r.json();
+  }
+
+  document.getElementById('url').addEventListener('keydown', e => { if (e.key==='Enter') findSingle(); });
 </script>
 </body>
 </html>
