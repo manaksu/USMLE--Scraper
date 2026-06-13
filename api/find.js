@@ -61,6 +61,21 @@ function parseBody(req) {
   });
 }
 
+function extractLink(text) {
+  // Try clean JSON parse first
+  try {
+    const clean = text.replace(/```[^`]*```/gs, "").trim();
+    const parsed = JSON.parse(clean);
+    return parsed.link || null;
+  } catch {}
+  // Fallback: regex extract a URL from the response
+  const match = text.match(/"link"\s*:\s*"(https?:\/\/[^"]+)"/);
+  if (match) return match[1];
+  // Last resort: find any URL in the text
+  const urlMatch = text.match(/https?:\/\/[^\s"'<>]+/);
+  return urlMatch ? urlMatch[0] : null;
+}
+
 async function askClaude(apiKey, links, prompt) {
   const payload = JSON.stringify({
     model: "claude-sonnet-4-6",
@@ -85,8 +100,7 @@ async function askClaude(apiKey, links, prompt) {
 
   const data = JSON.parse(raw);
   if (data.error) throw new Error(data.error.message);
-  const text = data.content[0].text.replace(/```[^`]*```/gs, "").trim();
-  return JSON.parse(text).link || null;
+  return extractLink(data.content[0].text);
 }
 
 module.exports = async function handler(req, res) {
@@ -121,11 +135,11 @@ module.exports = async function handler(req, res) {
     const fmHtml = await httpGet(fmLink);
     const fmLinks = extractLinks(fmHtml, fmLink);
 
-    const applyLink = await askClaude(apiKey, fmLinks,
+    const applyLink = fmLinks.length > 0 ? await askClaude(apiKey, fmLinks,
       `From these links on ${fmLink}, find the ONE link related to applying to the residency program. ` +
       `It may say 'How to Apply', 'To Apply', 'Apply', 'Apply Now', 'Application', or similar. ` +
       `Return ONLY JSON: {"link": "https://..."} or {"link": null} if not found.\n\n`
-    );
+    ) : null;
 
     return res.json({ fmLink, applyLink });
 
