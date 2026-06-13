@@ -61,17 +61,13 @@ function parseBody(req) {
   });
 }
 
-async function askClaude(apiKey, links, url) {
+async function askClaude(apiKey, links, prompt) {
   const payload = JSON.stringify({
     model: "claude-sonnet-4-6",
     max_tokens: 200,
     messages: [{
       role: "user",
-      content:
-        `From these links on ${url}, find the ONE link for a Family Medicine Residency program page. ` +
-        `It may say 'Family Medicine Residency', 'FM Residency', 'Residency Programs', 'Graduate Medical Education', or similar. ` +
-        `Return ONLY JSON: {"link": "https://..."} or {"link": null} if not found.\n\n` +
-        links.join("\n")
+      content: prompt + links.join("\n")
     }]
   });
 
@@ -101,20 +97,39 @@ module.exports = async function handler(req, res) {
   if (req.method !== "POST") return res.status(405).end();
 
   const apiKey = (process.env.ANTHROPIC_API_KEY || "").trim();
-  if (!apiKey) return res.status(500).json({ error: "ANTHROPIC_API_KEY not set in Vercel environment variables" });
+  if (!apiKey) return res.status(500).json({ error: "ANTHROPIC_API_KEY not set" });
 
   const body = await parseBody(req);
   const { url } = body;
   if (!url) return res.status(400).json({ error: "No URL provided" });
 
   try {
+    // Step 1: Find FM Residency page
     const html = await httpGet(url);
     const links = extractLinks(html, url);
-    if (links.length === 0) return res.json({ link: null, error: "No links found on this page." });
+    if (links.length === 0) return res.json({ fmLink: null, applyLink: null, error: "No links found on this page." });
 
-    const link = await askClaude(apiKey, links, url);
-    return res.json({ link });
+    const fmLink = await askClaude(apiKey, links,
+      `From these links on ${url}, find the ONE link for a Family Medicine Residency program page. ` +
+      `It may say 'Family Medicine Residency', 'FM Residency', 'Residency Programs', 'Graduate Medical Education', or similar. ` +
+      `Return ONLY JSON: {"link": "https://..."} or {"link": null} if not found.\n\n`
+    );
+
+    if (!fmLink) return res.json({ fmLink: null, applyLink: null });
+
+    // Step 2: Find Apply link on FM page
+    const fmHtml = await httpGet(fmLink);
+    const fmLinks = extractLinks(fmHtml, fmLink);
+
+    const applyLink = await askClaude(apiKey, fmLinks,
+      `From these links on ${fmLink}, find the ONE link related to applying to the residency program. ` +
+      `It may say 'How to Apply', 'To Apply', 'Apply', 'Apply Now', 'Application', or similar. ` +
+      `Return ONLY JSON: {"link": "https://..."} or {"link": null} if not found.\n\n`
+    );
+
+    return res.json({ fmLink, applyLink });
+
   } catch (e) {
-    return res.status(500).json({ link: null, error: e.message });
+    return res.status(500).json({ fmLink: null, applyLink: null, error: e.message });
   }
 };
