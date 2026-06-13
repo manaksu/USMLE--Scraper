@@ -19,7 +19,7 @@ function httpGet(url) {
       res.on("end", () => resolve(data));
     });
     req.on("error", reject);
-    req.on("timeout", () => { req.destroy(); reject(new Error("Timed out fetching page")); });
+    req.on("timeout", () => { req.destroy(); reject(new Error("Timed out")); });
   });
 }
 
@@ -67,16 +67,13 @@ function extractLink(text) {
     const parsed = JSON.parse(clean);
     return parsed.link || null;
   } catch {}
-  const match = text.match(/"link"\s*:\s*"(https?:\/\/[^"]+)"/);
-  if (match) return match[1];
-  const urlMatch = text.match(/https?:\/\/[^\s"'<>]+/);
-  return urlMatch ? urlMatch[0] : null;
+  const m1 = text.match(/"link"\s*:\s*"(https?:\/\/[^"]+)"/);
+  if (m1) return m1[1];
+  const m2 = text.match(/https?:\/\/[^\s"'<>]+/);
+  return m2 ? m2[0] : null;
 }
 
-async function callClaude(apiKey, messages, tools) {
-  const body = { model: "claude-sonnet-4-6", max_tokens: 1000, messages };
-  if (tools) body.tools = tools;
-
+async function claudePost(apiKey, body) {
   const payload = JSON.stringify(body);
   const raw = await httpPost({
     hostname: "api.anthropic.com",
@@ -89,55 +86,83 @@ async function callClaude(apiKey, messages, tools) {
       "Content-Length": Buffer.byteLength(payload)
     }
   }, payload);
-
   const data = JSON.parse(raw);
   if (data.error) throw new Error(data.error.message);
   return data;
 }
 
-// Use Claude web search to find hospital website from program name
+// Find website from program name using web search
 async function findWebsite(apiKey, programName) {
-  const data = await callClaude(apiKey, [{
-    role: "user",
-    content: `Search for the official hospital or medical center website for this residency program: "${programName}". Return ONLY JSON: {"website": "https://..."} with the main hospital website URL, or {"website": null} if not found.`
-  }], [{
-    type: "web_search_20250305",
-    name: "web_search"
-  }]);
-
-  // Find text content in response
-  const textBlock = data.content.find(b => b.type === "text");
-  if (!textBlock) return null;
-  return extractLink(textBlock.text.replace(/website/g, 'link')) ||
-    (() => {
-      try {
-        const m = textBlock.text.match(/"website"\s*:\s*"(https?:\/\/[^"]+)"/);
-        return m ? m[1] : null;
-      } catch { return null; }
-    })();
+  const data = await claudePost(apiKey, {
+    model: "claude-sonnet-4-6",
+    max_tokens: 300,
+    tools: [{ type: "web_search_20250305", name: "web_search" }],
+    messages: [{
+      role: "user",
+      content: `Find the official hospital or medical center website for: "${programName}". Return ONLY JSON: {"website": "https://..."} or {"website": null}.`
+    }]
+  });
+  const text = data.content.find(b => b.type === "text");
+  if (!text) return null;
+  const m = text.text.match(/"website"\s*:\s*"(https?:\/\/[^"]+)"/);
+  return m ? m[1] : extractLink(text.text);
 }
 
-async function askClaude(apiKey, links, prompt) {
-  const payload = JSON.stringify({
+// Ask Claude to find FM residency link from a list of links
+async function findFmLink(apiKey, links, sourceUrl) {
+  const data = await claudePost(apiKey, {
     model: "claude-sonnet-4-6",
     max_tokens: 200,
-    messages: [{ role: "user", content: prompt + links.join("\n") }]
+    messages: [{
+      role: "user",
+      content:
+        `From these links on ${sourceUrl}, find the ONE link most likely leading to a Family Medicine Residency program page.\n` +
+        `It could be labeled: 'Family Medicine Residency', 'FM Residency', 'Residency Programs', 'Graduate Medical Education', 'GME', 'Medical Education', 'Careers', 'Medical Training', or similar.\n` +
+        `Return ONLY JSON: {"link": "https://..."} or {"link": null} if not found.\n\n` +
+        links.join("\n")
+    }]
   });
+  return extractLink(data.content[0].text);
+}
 
-  const raw = await httpPost({
-    hostname: "api.anthropic.com",
-    path: "/v1/messages",
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "x-api-key": apiKey,
-      "anthropic-version": "2023-06-01",
-      "Content-Length": Buffer.byteLength(payload)
-    }
-  }, payload);
+// Find intermediate pages that might contain FM residency links (GME, Careers, Education)
+async function findGatewayLinks(apiKey, links, sourceUrl) {
+  const data = await claudePost(apiKey, {
+    model: "claude-sonnet-4-6",
+    max_tokens: 300,
+    messages: [{
+      role: "user",
+      content:
+        `From these links on ${sourceUrl}, find up to 4 links that might lead to a page containing residency or medical training programs.\n` +
+        `Look for: 'Careers', 'Medical Education', 'Graduate Medical Education', 'GME', 'Training Programs', 'Education & Research', 'For Physicians', 'Academic Affairs', 'Medical Staff', or similar.\n` +
+        `Return ONLY JSON: {"links": ["https://...", "https://..."]} — empty array if none found.\n\n` +
+        links.join("\n")
+    }]
+  });
+  try {
+    const text = data.content[0].text.replace(/```[^`]*```/gs, "").trim();
+    const parsed = JSON.parse(text);
+    return Array.isArray(parsed.links) ? parsed.links : [];
+  } catch {
+    const matches = [...data.content[0].text.matchAll(/https?:\/\/[^\s"'<>]+/g)];
+    return matches.map(m => m[0]).slice(0, 4);
+  }
+}
 
-  const data = JSON.parse(raw);
-  if (data.error) throw new Error(data.error.message);
+// Find apply link from FM residency page
+async function findApplyLink(apiKey, links, sourceUrl) {
+  const data = await claudePost(apiKey, {
+    model: "claude-sonnet-4-6",
+    max_tokens: 200,
+    messages: [{
+      role: "user",
+      content:
+        `From these links on ${sourceUrl}, find the ONE link for applying to the residency program.\n` +
+        `Look for: 'How to Apply', 'Apply Now', 'Apply', 'To Apply', 'Application', 'Application Process'.\n` +
+        `Return ONLY JSON: {"link": "https://..."} or {"link": null}.\n\n` +
+        links.join("\n")
+    }]
+  });
   return extractLink(data.content[0].text);
 }
 
@@ -152,41 +177,44 @@ module.exports = async function handler(req, res) {
   if (!apiKey) return res.status(500).json({ error: "ANTHROPIC_API_KEY not set" });
 
   const body = await parseBody(req);
-  const { programName, url: directUrl } = body;
-  if (!programName && !directUrl) return res.status(400).json({ error: "No program name or URL provided" });
+  const { programName } = body;
+  if (!programName) return res.status(400).json({ error: "No program name provided" });
 
   try {
-    let websiteUrl = directUrl;
+    // Step 1: Find hospital website
+    const website = await findWebsite(apiKey, programName);
+    if (!website) return res.json({ website: null, fmLink: null, applyLink: null, error: `Could not find website for "${programName}"` });
 
-    // Step 1: Find website from program name if no URL given
-    if (!websiteUrl) {
-      websiteUrl = await findWebsite(apiKey, programName);
-      if (!websiteUrl) return res.json({ website: null, fmLink: null, applyLink: null, error: `Could not find website for "${programName}"` });
+    // Step 2: Scrape main page, look for FM link directly
+    const html = await httpGet(website);
+    const links = extractLinks(html, website);
+
+    let fmLink = links.length > 0 ? await findFmLink(apiKey, links, website) : null;
+
+    // Step 3: If not found, dig into gateway pages (Careers, GME, Education, etc.)
+    if (!fmLink && links.length > 0) {
+      const gatewayLinks = await findGatewayLinks(apiKey, links, website);
+
+      for (const gLink of gatewayLinks) {
+        try {
+          const gHtml = await httpGet(gLink);
+          const gLinks = extractLinks(gHtml, gLink);
+          if (gLinks.length > 0) {
+            fmLink = await findFmLink(apiKey, gLinks, gLink);
+            if (fmLink) break;
+          }
+        } catch {}
+      }
     }
 
-    // Step 2: Find FM Residency page
-    const html = await httpGet(websiteUrl);
-    const links = extractLinks(html, websiteUrl);
-    if (links.length === 0) return res.json({ website: websiteUrl, fmLink: null, applyLink: null, error: "No links found on website." });
+    if (!fmLink) return res.json({ website, fmLink: null, applyLink: null });
 
-    const fmLink = await askClaude(apiKey, links,
-      `From these links on ${websiteUrl}, find the ONE link for a Family Medicine Residency program page. ` +
-      `It may say 'Family Medicine Residency', 'FM Residency', 'Residency Programs', 'Graduate Medical Education', or similar. ` +
-      `Return ONLY JSON: {"link": "https://..."} or {"link": null} if not found.\n\n`
-    );
-
-    if (!fmLink) return res.json({ website: websiteUrl, fmLink: null, applyLink: null });
-
-    // Step 3: Find Apply link
+    // Step 4: Find Apply link on FM page
     const fmHtml = await httpGet(fmLink);
     const fmLinks = extractLinks(fmHtml, fmLink);
-    const applyLink = fmLinks.length > 0 ? await askClaude(apiKey, fmLinks,
-      `From these links on ${fmLink}, find the ONE link related to applying to the residency program. ` +
-      `It may say 'How to Apply', 'To Apply', 'Apply', 'Apply Now', 'Application', or similar. ` +
-      `Return ONLY JSON: {"link": "https://..."} or {"link": null} if not found.\n\n`
-    ) : null;
+    const applyLink = fmLinks.length > 0 ? await findApplyLink(apiKey, fmLinks, fmLink) : null;
 
-    return res.json({ website: websiteUrl, fmLink, applyLink });
+    return res.json({ website, fmLink, applyLink });
 
   } catch (e) {
     return res.status(500).json({ website: null, fmLink: null, applyLink: null, error: e.message });
