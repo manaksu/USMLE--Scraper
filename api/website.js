@@ -22,6 +22,25 @@ function parseBody(req) {
   });
 }
 
+async function claudeWithSearch(apiKey, prompt) {
+  const payload = JSON.stringify({
+    model: "claude-sonnet-4-6",
+    max_tokens: 500,
+    tools: [{ type: "web_search_20250305", name: "web_search" }],
+    messages: [{ role: "user", content: prompt }]
+  });
+  const raw = await httpPost({
+    hostname: "api.anthropic.com", path: "/v1/messages", method: "POST",
+    headers: {
+      "Content-Type": "application/json", "x-api-key": apiKey,
+      "anthropic-version": "2023-06-01", "Content-Length": Buffer.byteLength(payload)
+    }
+  }, payload);
+  const data = JSON.parse(raw);
+  if (data.error) throw new Error(data.error.message);
+  return data.content.find(b => b.type === "text")?.text || "";
+}
+
 module.exports = async function handler(req, res) {
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
@@ -37,35 +56,49 @@ module.exports = async function handler(req, res) {
   if (!programName) return res.status(400).json({ error: "No program name provided" });
 
   try {
-    const payload = JSON.stringify({
-      model: "claude-sonnet-4-6",
-      max_tokens: 500,
-      tools: [{ type: "web_search_20250305", name: "web_search" }],
-      messages: [{
-        role: "user",
-        content: `Find the official hospital or medical center website for this residency program: "${programName}". Return ONLY JSON: {"website": "https://..."} or {"website": null}.`
-      }]
-    });
+    // Step 1: Search specifically for this residency program
+    const searchText = await claudeWithSearch(apiKey,
+      `Search for the EXACT Family Medicine Residency program named "${programName}".
+      This is a specific residency training program, NOT just the hospital with a similar name.
+      Search for: "${programName} family medicine residency program official site"
+      Find the official website of THIS specific program.
+      Important: "${programName}" is the exact program name — do not substitute a different institution.
+      Return ONLY JSON: {"website": "https://...", "confidence": "high/low", "reason": "why you chose this"} or {"website": null, "reason": "why not found"}`
+    );
 
-    const raw = await httpPost({
-      hostname: "api.anthropic.com",
-      path: "/v1/messages",
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "x-api-key": apiKey,
-        "anthropic-version": "2023-06-01",
-        "Content-Length": Buffer.byteLength(payload)
+    // Extract JSON
+    let website = null, confidence = "low", reason = "";
+    try {
+      const clean = searchText.replace(/```[^`]*```/gs, "").trim();
+      const m = clean.match(/\{[\s\S]*\}/);
+      if (m) {
+        const parsed = JSON.parse(m[0]);
+        website = parsed.website || null;
+        confidence = parsed.confidence || "low";
+        reason = parsed.reason || "";
       }
-    }, payload);
+    } catch {}
 
-    const data = JSON.parse(raw);
-    if (data.error) throw new Error(data.error.message);
-    const text = data.content.find(b => b.type === "text");
-    if (!text) return res.json({ website: null });
-    const m = text.text.match(/"website"\s*:\s*"(https?:\/\/[^"]+)"/);
-    const url = m ? m[1] : (text.text.match(/https?:\/\/[^\s"'<>]+/) || [])[0] || null;
-    return res.json({ website: url });
+    // Step 2: If low confidence, do a second targeted search to verify
+    if (website && confidence === "low") {
+      const verifyText = await claudeWithSearch(apiKey,
+        `I'm looking for the residency program named exactly "${programName}".
+        I found this website: ${website}
+        Search for "${programName}" and confirm if ${website} is the correct official site for THIS program specifically.
+        If it's wrong, find the correct one.
+        Return ONLY JSON: {"website": "https://...", "confirmed": true/false}`
+      );
+      try {
+        const m = verifyText.match(/\{[\s\S]*\}/);
+        if (m) {
+          const v = JSON.parse(m[0]);
+          if (v.website) website = v.website;
+        }
+      } catch {}
+    }
+
+    return res.json({ website, reason });
+
   } catch (e) {
     return res.status(500).json({ website: null, error: e.message });
   }
