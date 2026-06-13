@@ -104,10 +104,10 @@
         result.className = 'err';
         result.innerHTML = `<div class="tag">Not found</div>${d.error || 'No FM Residency link on this page. Try their GME or Residency section directly.'}`;
       }
-    } catch {
+    } catch (e) {
       result.style.display = 'block';
       result.className = 'err';
-      result.innerHTML = '<div class="tag">Error</div>Something went wrong. Please try again.';
+      result.innerHTML = `<div class="tag">Error</div>${e.message}`;
     }
 
     btn.disabled = false;
