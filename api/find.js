@@ -14,7 +14,6 @@ function fetchUrl(url) {
       },
       timeout: 15000
     }, (res) => {
-      // Follow redirects
       if (res.statusCode >= 300 && res.statusCode < 400 && res.headers.location) {
         return fetchUrl(res.headers.location).then(resolve).catch(reject);
       }
@@ -43,11 +42,29 @@ function extractLinks(html, baseUrl) {
   return [...links].slice(0, 300);
 }
 
+// Parse raw body from stream
+function parseBody(req) {
+  return new Promise((resolve) => {
+    if (req.body) return resolve(req.body);
+    let raw = "";
+    req.on("data", chunk => raw += chunk);
+    req.on("end", () => {
+      try { resolve(JSON.parse(raw)); }
+      catch { resolve({}); }
+    });
+  });
+}
+
 module.exports = async function handler(req, res) {
   res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+
+  if (req.method === "OPTIONS") return res.status(200).end();
   if (req.method !== "POST") return res.status(405).end();
 
-  const { url } = req.body || {};
+  const body = await parseBody(req);
+  const { url } = body;
   if (!url) return res.status(400).json({ error: "No URL provided" });
 
   try {
