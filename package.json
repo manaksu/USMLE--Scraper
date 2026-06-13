@@ -1,0 +1,9 @@
+{
+  "name": "fm-finder",
+  "version": "1.0.0",
+  "dependencies": {
+    "node-fetch": "^3.3.2",
+    "@anthropic-ai/sdk": "^0.24.0",
+    "cheerio": "^1.0.0"
+  }
+}
