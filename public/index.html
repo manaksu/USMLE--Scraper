@@ -21,16 +21,10 @@
     h1 { font-size: 1.35rem; font-weight: 700; color: #1a202c; margin-bottom: 6px; }
     .sub { color: #718096; font-size: 0.88rem; margin-bottom: 28px; line-height: 1.5; }
 
-    /* Tabs */
     .tabs { display: flex; gap: 4px; margin-bottom: 24px; background: #f0f4f8; border-radius: 10px; padding: 4px; }
-    .tab {
-      flex: 1; padding: 9px; border: none; background: none;
-      border-radius: 7px; font-size: 0.88rem; font-weight: 600;
-      color: #718096; cursor: pointer; transition: all 0.15s;
-    }
+    .tab { flex: 1; padding: 9px; border: none; background: none; border-radius: 7px; font-size: 0.88rem; font-weight: 600; color: #718096; cursor: pointer; transition: all 0.15s; }
     .tab.active { background: white; color: #2b6cb0; box-shadow: 0 1px 4px rgba(0,0,0,0.1); }
 
-    /* Panels */
     .panel { display: none; }
     .panel.active { display: block; }
 
@@ -38,12 +32,10 @@
     input[type="text"], input[type="url"] {
       width: 100%; padding: 13px 15px;
       border: 2px solid #e2e8f0; border-radius: 10px;
-      font-size: 0.95rem; color: #2d3748; outline: none;
-      transition: border-color 0.15s;
+      font-size: 0.95rem; color: #2d3748; outline: none; transition: border-color 0.15s;
     }
     input:focus { border-color: #4299e1; }
 
-    /* File upload */
     .upload-area {
       border: 2px dashed #cbd5e0; border-radius: 10px;
       padding: 32px; text-align: center; cursor: pointer;
@@ -55,28 +47,15 @@
     .upload-area strong { color: #2b6cb0; }
     .file-hint { font-size: 0.78rem; color: #a0aec0; margin-top: 10px; }
 
-    /* Button */
-    .btn {
-      margin-top: 14px; width: 100%; padding: 13px;
-      background: #2b6cb0; color: white; border: none;
-      border-radius: 10px; font-size: 1rem; font-weight: 600;
-      cursor: pointer; transition: background 0.15s;
-      display: flex; align-items: center; justify-content: center; gap: 8px;
-    }
+    .btn { margin-top: 14px; width: 100%; padding: 13px; background: #2b6cb0; color: white; border: none; border-radius: 10px; font-size: 1rem; font-weight: 600; cursor: pointer; transition: background 0.15s; display: flex; align-items: center; justify-content: center; gap: 8px; }
     .btn:hover:not(:disabled) { background: #2c5282; }
     .btn:disabled { background: #a0aec0; cursor: not-allowed; }
     .btn.green { background: #276749; }
     .btn.green:hover:not(:disabled) { background: #22543d; }
 
-    .spinner {
-      width: 16px; height: 16px;
-      border: 2.5px solid rgba(255,255,255,0.4);
-      border-top-color: white; border-radius: 50%;
-      animation: spin 0.7s linear infinite; display: none;
-    }
+    .spinner { width: 16px; height: 16px; border: 2.5px solid rgba(255,255,255,0.4); border-top-color: white; border-radius: 50%; animation: spin 0.7s linear infinite; display: none; }
     @keyframes spin { to { transform: rotate(360deg); } }
 
-    /* Single results */
     .results { margin-top: 20px; display: flex; flex-direction: column; gap: 10px; }
     .result-row { padding: 14px 16px; border-radius: 10px; display: none; }
     .ok  { background: #f0fff4; border: 1.5px solid #9ae6b4; }
@@ -84,16 +63,11 @@
     .tag { font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: #718096; margin-bottom: 5px; }
     a { color: #2b6cb0; word-break: break-all; font-weight: 500; font-size: 0.9rem; }
 
-    /* Batch progress */
     .progress-wrap { margin-top: 20px; display: none; }
     .progress-label { font-size: 0.85rem; color: #4a5568; margin-bottom: 8px; display: flex; justify-content: space-between; }
     .progress-bar { background: #e2e8f0; border-radius: 99px; height: 8px; overflow: hidden; }
     .progress-fill { background: #2b6cb0; height: 100%; border-radius: 99px; transition: width 0.3s; width: 0%; }
-    .batch-log {
-      margin-top: 14px; background: #f7fafc; border-radius: 10px;
-      padding: 12px 14px; max-height: 200px; overflow-y: auto;
-      font-size: 0.82rem; color: #4a5568; line-height: 1.7;
-    }
+    .batch-log { margin-top: 14px; background: #f7fafc; border-radius: 10px; padding: 12px 14px; max-height: 200px; overflow-y: auto; font-size: 0.82rem; color: #4a5568; line-height: 1.7; }
     .log-ok { color: #276749; }
     .log-err { color: #c53030; }
   </style>
@@ -102,22 +76,26 @@
 <div class="card">
   <div class="icon">🏥</div>
   <h1>FM Residency Finder</h1>
-  <p class="sub">Find Family Medicine Residency pages and Apply links from hospital websites.</p>
+  <p class="sub">Enter a program name or upload a file — finds the hospital website, FM Residency page, and Apply link.</p>
 
   <div class="tabs">
-    <button class="tab active" onclick="switchTab('single')">Single URL</button>
+    <button class="tab active" onclick="switchTab('single')">Single Search</button>
     <button class="tab" onclick="switchTab('batch')">Upload File</button>
   </div>
 
-  <!-- Single URL -->
+  <!-- Single -->
   <div class="panel active" id="panel-single">
-    <label for="url">Hospital Website</label>
-    <input id="url" type="url" placeholder="https://www.hospital.org" />
+    <label for="program">Program or Hospital Name</label>
+    <input id="program" type="text" placeholder="e.g. St. Mary's General Hospital Family Medicine" />
     <button class="btn" id="btn-single" onclick="findSingle()">
       <div class="spinner" id="spin-single"></div>
-      <span id="label-single">Find FM Residency Page</span>
+      <span id="label-single">Search</span>
     </button>
     <div class="results">
+      <div class="result-row" id="row-website">
+        <div class="tag">Hospital Website</div>
+        <a id="link-website" href="#" target="_blank"></a>
+      </div>
       <div class="result-row" id="row-fm">
         <div class="tag">FM Residency Page</div>
         <a id="link-fm" href="#" target="_blank"></a>
@@ -133,7 +111,7 @@
     </div>
   </div>
 
-  <!-- Batch Upload -->
+  <!-- Batch -->
   <div class="panel" id="panel-batch">
     <label>Upload File</label>
     <div class="upload-area" id="upload-area" onclick="document.getElementById('file-input').click()"
@@ -142,7 +120,7 @@
          ondrop="handleDrop(event)">
       <div class="upload-icon">📄</div>
       <p><strong>Click to upload</strong> or drag and drop</p>
-      <p class="file-hint">CSV or TXT — one URL per line, or a CSV with a column named "url" or "website"</p>
+      <p class="file-hint">CSV or TXT — one program/hospital name per line, or CSV with a "name" column</p>
     </div>
     <input type="file" id="file-input" accept=".csv,.txt" style="display:none" onchange="handleFile(this.files[0])" />
     <div id="file-name" style="font-size:0.82rem;color:#718096;margin-top:8px;"></div>
@@ -168,29 +146,27 @@
 </div>
 
 <script>
-  let parsedUrls = [];
+  let parsedNames = [];
   let batchResults = [];
 
   function switchTab(tab) {
-    document.querySelectorAll('.tab').forEach((t,i) => t.classList.toggle('active', (i===0) === (tab==='single')));
+    document.querySelectorAll('.tab').forEach((t,i) => t.classList.toggle('active', (i===0)===(tab==='single')));
     document.getElementById('panel-single').classList.toggle('active', tab==='single');
     document.getElementById('panel-batch').classList.toggle('active', tab==='batch');
   }
 
-  // ── Single ──────────────────────────────────────────────────────
   async function findSingle() {
-    const url = document.getElementById('url').value.trim();
-    if (!url) return;
+    const name = document.getElementById('program').value.trim();
+    if (!name) return;
     setLoading('single', true);
-    ['row-fm','row-apply','row-err'].forEach(id => document.getElementById(id).style.display='none');
+    ['row-website','row-fm','row-apply','row-err'].forEach(id => document.getElementById(id).style.display='none');
     try {
-      const d = await callFind(url);
-      if (d.error && !d.fmLink) { showErr(d.error); }
-      else {
-        if (d.fmLink) showRow('row-fm','link-fm', d.fmLink);
-        if (d.applyLink) showRow('row-apply','link-apply', d.applyLink);
-        if (!d.fmLink) showErr('No FM Residency link found. Try their GME or Residency section.');
-      }
+      const d = await callFind(name);
+      if (d.website) showRow('row-website','link-website', d.website);
+      if (d.fmLink)  showRow('row-fm','link-fm', d.fmLink);
+      if (d.applyLink) showRow('row-apply','link-apply', d.applyLink);
+      if (d.error && !d.website) showErr(d.error);
+      else if (!d.fmLink) showErr('FM Residency page not found. Try adding more detail to the name.');
     } catch(e) { showErr(e.message); }
     setLoading('single', false);
   }
@@ -207,67 +183,57 @@
   function setLoading(which, on) {
     document.getElementById('btn-'+which).disabled = on;
     document.getElementById('spin-'+which).style.display = on ? 'block' : 'none';
-    document.getElementById('label-'+which).textContent = on ? 'Searching...' : (which==='single' ? 'Find FM Residency Page' : 'Process File');
+    document.getElementById('label-'+which).textContent = on ? 'Searching...' : (which==='single' ? 'Search' : 'Process File');
   }
 
-  // ── File handling ───────────────────────────────────────────────
   function handleDrop(e) {
     e.preventDefault();
     document.getElementById('upload-area').classList.remove('drag');
-    const file = e.dataTransfer.files[0];
-    if (file) handleFile(file);
+    handleFile(e.dataTransfer.files[0]);
   }
 
   function handleFile(file) {
     if (!file) return;
-    document.getElementById('file-name').textContent = '📎 ' + file.name;
     const reader = new FileReader();
     reader.onload = (e) => {
       const text = e.target.result;
-      parsedUrls = parseUrls(text, file.name.endsWith('.csv'));
-      document.getElementById('btn-batch').disabled = parsedUrls.length === 0;
-      document.getElementById('file-name').textContent = `📎 ${file.name} — ${parsedUrls.length} URL(s) found`;
+      parsedNames = parseNames(text, file.name.endsWith('.csv'));
+      document.getElementById('btn-batch').disabled = parsedNames.length === 0;
+      document.getElementById('file-name').textContent = `📎 ${file.name} — ${parsedNames.length} program(s) found`;
     };
     reader.readAsText(file);
   }
 
-  function parseUrls(text, isCsv) {
+  function parseNames(text, isCsv) {
     const lines = text.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
-    if (!isCsv) return lines.filter(l => l.startsWith('http'));
-
-    // CSV: find column named url/website/link
+    if (!isCsv) return lines;
     const headers = lines[0].split(',').map(h => h.toLowerCase().replace(/['"]/g,'').trim());
-    const col = headers.findIndex(h => ['url','website','link','site'].includes(h));
-    if (col === -1) return lines.slice(1).map(l => l.split(',')[0].replace(/['"]/g,'').trim()).filter(l => l.startsWith('http'));
-    return lines.slice(1).map(l => {
-      const cells = l.split(',');
-      return (cells[col] || '').replace(/['"]/g,'').trim();
-    }).filter(l => l.startsWith('http'));
+    const col = headers.findIndex(h => ['name','program','hospital','facility'].includes(h));
+    const idx = col === -1 ? 0 : col;
+    return lines.slice(1).map(l => l.split(',')[idx].replace(/['"]/g,'').trim()).filter(Boolean);
   }
 
-  // ── Batch run ───────────────────────────────────────────────────
   async function runBatch() {
-    if (!parsedUrls.length) return;
+    if (!parsedNames.length) return;
     batchResults = [];
     setLoading('batch', true);
     document.getElementById('btn-download').style.display = 'none';
     document.getElementById('progress-wrap').style.display = 'block';
     document.getElementById('batch-log').innerHTML = '';
 
-    const total = parsedUrls.length;
+    const total = parsedNames.length;
     for (let i = 0; i < total; i++) {
-      const url = parsedUrls[i];
-      updateProgress(i, total, url);
+      const name = parsedNames[i];
+      updateProgress(i, total, name);
       try {
-        const d = await callFind(url);
-        batchResults.push({ url, fmLink: d.fmLink||'', applyLink: d.applyLink||'', error: d.error||'' });
-        addLog(url, d.fmLink, d.applyLink, d.error);
+        const d = await callFind(name);
+        batchResults.push({ name, website: d.website||'', fmLink: d.fmLink||'', applyLink: d.applyLink||'', error: d.error||'' });
+        addLog(name, d.website, d.fmLink, d.applyLink, d.error);
       } catch(e) {
-        batchResults.push({ url, fmLink:'', applyLink:'', error: e.message });
-        addLog(url, null, null, e.message);
+        batchResults.push({ name, website:'', fmLink:'', applyLink:'', error: e.message });
+        addLog(name, null, null, null, e.message);
       }
     }
-
     updateProgress(total, total, 'Done');
     setLoading('batch', false);
     document.getElementById('label-batch').textContent = 'Process File';
@@ -281,21 +247,19 @@
     document.getElementById('progress-count').textContent = `${done} / ${total}`;
   }
 
-  function addLog(url, fmLink, applyLink, error) {
+  function addLog(name, website, fmLink, applyLink, error) {
     const log = document.getElementById('batch-log');
-    const domain = (() => { try { return new URL(url).hostname; } catch { return url; } })();
-    if (error && !fmLink) {
-      log.innerHTML += `<div class="log-err">✗ ${domain} — ${error}</div>`;
+    if (error && !website) {
+      log.innerHTML += `<div class="log-err">✗ ${name} — ${error}</div>`;
     } else {
-      log.innerHTML += `<div class="log-ok">✓ ${domain} — FM: ${fmLink ? 'found' : 'not found'} | Apply: ${applyLink ? 'found' : 'not found'}</div>`;
+      log.innerHTML += `<div class="log-ok">✓ ${name} — Site: ${website?'✓':'✗'} | FM: ${fmLink?'✓':'✗'} | Apply: ${applyLink?'✓':'✗'}</div>`;
     }
     log.scrollTop = log.scrollHeight;
   }
 
-  // ── Download CSV ────────────────────────────────────────────────
   function downloadCSV() {
-    const rows = [['Hospital URL','FM Residency Page','How to Apply','Error']];
-    batchResults.forEach(r => rows.push([r.url, r.fmLink, r.applyLink, r.error]));
+    const rows = [['Program Name','Hospital Website','FM Residency Page','How to Apply','Error']];
+    batchResults.forEach(r => rows.push([r.name, r.website, r.fmLink, r.applyLink, r.error]));
     const csv = rows.map(r => r.map(c => `"${(c||'').replace(/"/g,'""')}"`).join(',')).join('\n');
     const a = document.createElement('a');
     a.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv);
@@ -303,17 +267,16 @@
     a.click();
   }
 
-  // ── API call ────────────────────────────────────────────────────
-  async function callFind(url) {
+  async function callFind(programName) {
     const r = await fetch('/api/find', {
       method: 'POST',
       headers: {'Content-Type':'application/json'},
-      body: JSON.stringify({url})
+      body: JSON.stringify({ programName })
     });
     return r.json();
   }
 
-  document.getElementById('url').addEventListener('keydown', e => { if (e.key==='Enter') findSingle(); });
+  document.getElementById('program').addEventListener('keydown', e => { if (e.key==='Enter') findSingle(); });
 </script>
 </body>
 </html>
