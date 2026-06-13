@@ -6,63 +6,72 @@
   <title>FM Residency Finder</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: #eef2f7; min-height: 100vh; padding: 32px 24px; }
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: #eef2f7; min-height: 100vh; padding: 28px 20px; }
 
-    .top { max-width: 960px; margin: 0 auto 24px; }
-    h1 { font-size: 1.4rem; font-weight: 700; color: #1a202c; margin-bottom: 4px; }
-    .sub { color: #718096; font-size: 0.88rem; margin-bottom: 20px; }
+    .top { max-width: 100%; margin: 0 auto 20px; }
+    h1 { font-size: 1.3rem; font-weight: 700; color: #1a202c; margin-bottom: 4px; }
+    .sub { color: #718096; font-size: 0.85rem; margin-bottom: 16px; }
 
     .upload-area {
-      border: 2px dashed #cbd5e0; border-radius: 12px; padding: 28px;
+      border: 2px dashed #cbd5e0; border-radius: 12px; padding: 24px;
       text-align: center; cursor: pointer; background: white;
-      transition: border-color 0.15s; color: #718096;
+      transition: border-color 0.15s; color: #718096; max-width: 600px;
     }
     .upload-area:hover, .upload-area.drag { border-color: #4299e1; background: #ebf8ff; }
-    .upload-area .uicon { font-size: 1.8rem; margin-bottom: 6px; }
-    .upload-area p { font-size: 0.88rem; }
+    .upload-area .uicon { font-size: 1.6rem; margin-bottom: 6px; }
+    .upload-area p { font-size: 0.85rem; }
     .upload-area strong { color: #2b6cb0; }
-    .hint { font-size: 0.76rem; color: #a0aec0; margin-top: 6px; }
+    .hint { font-size: 0.74rem; color: #a0aec0; margin-top: 5px; }
+
+    /* Toolbar */
+    .toolbar { display: none; align-items: center; gap: 10px; margin-bottom: 14px; flex-wrap: wrap; }
+    .toolbar-info { font-size: 0.83rem; color: #4a5568; font-weight: 600; }
+    .btn { padding: 7px 14px; border: none; border-radius: 7px; font-size: 0.82rem; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 5px; transition: all 0.15s; }
+    .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+    .btn-blue { background: #ebf8ff; color: #2b6cb0; }
+    .btn-blue:hover:not(:disabled) { background: #bee3f8; }
+    .btn-green { background: #f0fff4; color: #276749; }
+    .btn-green:hover:not(:disabled) { background: #c6f6d5; }
+    .btn-solid-green { background: #276749; color: white; }
+    .btn-solid-green:hover:not(:disabled) { background: #22543d; }
+    .btn-sm { padding: 4px 9px; font-size: 0.74rem; }
 
     /* Table */
-    .table-wrap { max-width: 960px; margin: 0 auto; background: white; border-radius: 14px; box-shadow: 0 4px 20px rgba(0,0,0,0.07); overflow: hidden; display: none; }
-    .table-header { padding: 16px 20px; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; }
-    .table-header h2 { font-size: 0.95rem; font-weight: 700; color: #2d3748; }
-    .btn-dl { padding: 7px 14px; background: #276749; color: white; border: none; border-radius: 7px; font-size: 0.82rem; font-weight: 600; cursor: pointer; display: none; }
-    .btn-dl:hover { background: #22543d; }
-
-    table { width: 100%; border-collapse: collapse; }
-    th { background: #f7fafc; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: #718096; padding: 10px 16px; text-align: left; border-bottom: 1px solid #e2e8f0; }
-    td { padding: 12px 16px; border-bottom: 1px solid #f0f4f8; vertical-align: middle; font-size: 0.85rem; color: #2d3748; }
+    .table-wrap { background: white; border-radius: 14px; box-shadow: 0 4px 20px rgba(0,0,0,0.07); overflow-x: auto; display: none; }
+    table { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
+    th { background: #f7fafc; font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: #718096; padding: 10px 12px; text-align: left; border-bottom: 1px solid #e2e8f0; white-space: nowrap; }
+    th.added { background: #fffbeb; color: #b7791f; }
+    td { padding: 9px 12px; border-bottom: 1px solid #f0f4f8; vertical-align: middle; color: #2d3748; }
     tr:last-child td { border-bottom: none; }
-    tr:hover td { background: #f7fafc; }
+    tr:hover td { background: #fafbfc; }
 
-    .td-name { font-weight: 600; color: #1a202c; max-width: 200px; }
-    .td-link { max-width: 220px; }
-    .td-link a { color: #2b6cb0; font-size: 0.8rem; word-break: break-all; text-decoration: none; }
-    .td-link a:hover { text-decoration: underline; }
-    .td-link .empty { color: #cbd5e0; font-size: 0.78rem; }
+    .csv-cell { max-width: 160px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: #4a5568; }
+    .link-cell a { color: #2b6cb0; font-size: 0.78rem; word-break: break-all; text-decoration: none; }
+    .link-cell a:hover { text-decoration: underline; }
 
-    .td-actions { white-space: nowrap; }
-    .btn { padding: 6px 12px; border: none; border-radius: 7px; font-size: 0.78rem; font-weight: 600; cursor: pointer; transition: all 0.15s; display: inline-flex; align-items: center; gap: 5px; }
-    .btn-web { background: #ebf8ff; color: #2b6cb0; }
-    .btn-web:hover:not(:disabled) { background: #bee3f8; }
-    .btn-res { background: #f0fff4; color: #276749; margin-left: 6px; }
-    .btn-res:hover:not(:disabled) { background: #c6f6d5; }
-    .btn:disabled { opacity: 0.45; cursor: not-allowed; }
+    /* Editable apply field */
+    .apply-wrap { display: flex; align-items: center; gap: 5px; min-width: 200px; }
+    .apply-input {
+      flex: 1; padding: 4px 8px; border: 1px solid #e2e8f0; border-radius: 6px;
+      font-size: 0.76rem; color: #2d3748; outline: none; min-width: 0;
+    }
+    .apply-input:focus { border-color: #4299e1; }
+    .apply-input.has-value { border-color: #9ae6b4; background: #f0fff4; }
 
-    .spin { width: 10px; height: 10px; border: 2px solid rgba(0,0,0,0.15); border-top-color: currentColor; border-radius: 50%; animation: spin 0.6s linear infinite; display: none; }
+    .spin { width: 9px; height: 9px; border: 2px solid rgba(0,0,0,0.12); border-top-color: currentColor; border-radius: 50%; animation: spin 0.6s linear infinite; display: none; }
     @keyframes spin { to { transform: rotate(360deg); } }
 
-    .badge { display: inline-block; padding: 2px 7px; border-radius: 99px; font-size: 0.7rem; font-weight: 600; }
+    .badge { display: inline-block; padding: 2px 6px; border-radius: 99px; font-size: 0.68rem; font-weight: 600; }
     .badge-ok { background: #c6f6d5; color: #276749; }
     .badge-err { background: #fed7d7; color: #9b2c2c; }
+    .badge-wait { background: #e2e8f0; color: #718096; }
   </style>
 </head>
 <body>
 
 <div class="top">
   <h1>🏥 FM Residency Finder</h1>
-  <p class="sub">Upload a CSV of program names, then get the website and residency page for each.</p>
+  <p class="sub">Upload your program CSV — all columns shown. Get website and residency links per row, edit apply links manually, then download.</p>
 
   <div class="upload-area" id="upload-area"
        onclick="document.getElementById('file-input').click()"
@@ -70,34 +79,30 @@
        ondragleave="this.classList.remove('drag')"
        ondrop="handleDrop(event)">
     <div class="uicon">📄</div>
-    <p><strong>Click to upload</strong> or drag and drop a CSV / TXT file</p>
-    <p class="hint">CSV with a "name", "program", or "hospital" column — or a plain TXT with one name per line</p>
+    <p><strong>Click to upload</strong> or drag and drop</p>
+    <p class="hint">CSV or TXT file — all columns will be shown as-is</p>
   </div>
   <input type="file" id="file-input" accept=".csv,.txt" style="display:none" onchange="handleFile(this.files[0])"/>
 </div>
 
+<div class="toolbar" id="toolbar">
+  <span class="toolbar-info" id="toolbar-info"></span>
+  <button class="btn btn-blue" onclick="getWebsiteAll()">🌐 Get All Websites</button>
+  <button class="btn btn-green" onclick="getResidencyAll()">🔍 Get All Residency Pages</button>
+  <button class="btn btn-solid-green" onclick="downloadCSV()">⬇ Download CSV</button>
+</div>
+
 <div class="table-wrap" id="table-wrap">
-  <div class="table-header">
-    <h2 id="table-title">Programs</h2>
-    <button class="btn-dl" id="btn-dl" onclick="downloadCSV()">⬇ Download CSV</button>
-  </div>
-  <table>
-    <thead>
-      <tr>
-        <th>#</th>
-        <th>Program Name</th>
-        <th>Website</th>
-        <th>FM Residency Page</th>
-        <th>Apply Link</th>
-        <th>Actions</th>
-      </tr>
-    </thead>
+  <table id="main-table">
+    <thead id="thead"></thead>
     <tbody id="tbody"></tbody>
   </table>
 </div>
 
 <script>
-  let programs = []; // {name, website, fmLink, applyLink, error}
+  let csvHeaders = [];   // original CSV headers
+  let programs = [];     // [{...csvData, website, fmLink, applyLink}]
+  let nameCol = 0;       // which column has the program/hospital name
 
   function handleDrop(e) {
     e.preventDefault();
@@ -108,84 +113,143 @@
   function handleFile(file) {
     if (!file) return;
     const reader = new FileReader();
-    reader.onload = e => {
-      const text = e.target.result;
-      const names = parseNames(text, file.name.endsWith('.csv'));
-      programs = names.map(name => ({ name, website: null, fmLink: null, applyLink: null, error: null }));
-      renderTable();
-    };
+    reader.onload = e => init(e.target.result, file.name.endsWith('.csv'));
     reader.readAsText(file);
   }
 
-  function parseNames(text, isCsv) {
+  function init(text, isCsv) {
     const lines = text.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
-    if (!isCsv) return lines;
-    const headers = lines[0].split(',').map(h => h.toLowerCase().replace(/['"]/g,'').trim());
-    const col = headers.findIndex(h => ['name','program','hospital','facility'].includes(h));
-    const idx = col === -1 ? 0 : col;
-    return lines.slice(1).map(l => l.split(',')[idx].replace(/['"]/g,'').trim()).filter(Boolean);
+    if (!lines.length) return;
+
+    if (isCsv) {
+      csvHeaders = parseRow(lines[0]);
+      // Detect name column
+      const lower = csvHeaders.map(h => h.toLowerCase());
+      nameCol = lower.findIndex(h => ['name','program','hospital','facility','program name','hospital name'].includes(h));
+      if (nameCol === -1) nameCol = 0;
+
+      programs = lines.slice(1).map(line => {
+        const cells = parseRow(line);
+        const obj = { _csv: cells, website: '', fmLink: '', applyLink: '' };
+        return obj;
+      }).filter(p => p._csv.some(c => c));
+    } else {
+      csvHeaders = ['Program Name'];
+      nameCol = 0;
+      programs = lines.map(line => ({ _csv: [line], website: '', fmLink: '', applyLink: '' }));
+    }
+
+    renderTable();
+    document.getElementById('toolbar').style.display = 'flex';
+    document.getElementById('table-wrap').style.display = 'block';
+    document.getElementById('toolbar-info').textContent = `${programs.length} program${programs.length !== 1 ? 's' : ''} loaded`;
+  }
+
+  function parseRow(line) {
+    const cells = [];
+    let cur = '', inQ = false;
+    for (let i = 0; i < line.length; i++) {
+      const ch = line[i];
+      if (ch === '"') { inQ = !inQ; }
+      else if (ch === ',' && !inQ) { cells.push(cur.trim()); cur = ''; }
+      else cur += ch;
+    }
+    cells.push(cur.trim());
+    return cells;
+  }
+
+  function getName(i) {
+    return programs[i]._csv[nameCol] || '';
   }
 
   function renderTable() {
+    // Headers
+    const thead = document.getElementById('thead');
+    thead.innerHTML = '<tr>' +
+      csvHeaders.map(h => `<th>${esc(h)}</th>`).join('') +
+      `<th class="added">Website</th>` +
+      `<th class="added">FM Residency Page</th>` +
+      `<th class="added">Apply Link</th>` +
+      `<th class="added">Actions</th>` +
+      '</tr>';
+
+    // Rows
     const tbody = document.getElementById('tbody');
     tbody.innerHTML = '';
-    programs.forEach((p, i) => {
-      const tr = document.createElement('tr');
-      tr.id = `row-${i}`;
-      tr.innerHTML = `
-        <td style="color:#a0aec0;font-size:0.8rem">${i+1}</td>
-        <td class="td-name">${esc(p.name)}</td>
-        <td class="td-link" id="cell-web-${i}">${linkCell(p.website)}</td>
-        <td class="td-link" id="cell-fm-${i}">${linkCell(p.fmLink)}</td>
-        <td class="td-link" id="cell-apply-${i}">${linkCell(p.applyLink)}</td>
-        <td class="td-actions">
-          <button class="btn btn-web" id="btn-web-${i}" onclick="getWebsite(${i})">
-            <div class="spin" id="spin-web-${i}"></div>
-            🌐 Get Website
-          </button>
-          <button class="btn btn-res" id="btn-res-${i}" onclick="getResidency(${i})" ${p.website ? '' : 'disabled'}>
-            <div class="spin" id="spin-res-${i}"></div>
-            🔍 Get Residency Page
-          </button>
-        </td>`;
-      tbody.appendChild(tr);
-    });
-    document.getElementById('table-wrap').style.display = 'block';
-    document.getElementById('table-title').textContent = `${programs.length} Program${programs.length !== 1 ? 's' : ''}`;
+    programs.forEach((p, i) => tbody.appendChild(makeRow(i)));
   }
 
-  function linkCell(url) {
-    if (!url) return `<span class="empty">—</span>`;
-    const short = url.replace(/^https?:\/\//, '').replace(/\/$/, '');
-    return `<a href="${url}" target="_blank" title="${url}">${short.length > 35 ? short.slice(0,35)+'…' : short}</a>`;
+  function makeRow(i) {
+    const p = programs[i];
+    const tr = document.createElement('tr');
+    tr.id = `row-${i}`;
+
+    // CSV columns
+    let cells = csvHeaders.map((_, ci) => `<td class="csv-cell" title="${esc(p._csv[ci]||'')}">${esc(p._csv[ci]||'')}</td>`).join('');
+
+    // Website cell
+    cells += `<td class="link-cell" id="cell-web-${i}">${renderLink(p.website)}</td>`;
+
+    // FM cell
+    cells += `<td class="link-cell" id="cell-fm-${i}">${renderLink(p.fmLink)}</td>`;
+
+    // Apply cell — editable input
+    cells += `<td>
+      <div class="apply-wrap">
+        <input class="apply-input ${p.applyLink ? 'has-value' : ''}" id="apply-input-${i}"
+          placeholder="Paste or auto-fetch…" value="${esc(p.applyLink)}"
+          onchange="programs[${i}].applyLink=this.value;this.classList.toggle('has-value',!!this.value)"
+          oninput="programs[${i}].applyLink=this.value;this.classList.toggle('has-value',!!this.value)"/>
+      </div>
+    </td>`;
+
+    // Actions
+    cells += `<td style="white-space:nowrap">
+      <button class="btn btn-blue btn-sm" id="btn-web-${i}" onclick="getWebsite(${i})">
+        <div class="spin" id="spin-web-${i}"></div>🌐
+      </button>
+      <button class="btn btn-green btn-sm" id="btn-res-${i}" onclick="getResidency(${i})" ${p.website ? '' : 'disabled'}>
+        <div class="spin" id="spin-res-${i}"></div>🔍
+      </button>
+    </td>`;
+
+    tr.innerHTML = cells;
+    return tr;
   }
 
-  function esc(s) { return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+  function refreshRow(i) {
+    const old = document.getElementById(`row-${i}`);
+    old.replaceWith(makeRow(i));
+  }
 
+  function renderLink(url) {
+    if (!url) return `<span class="badge badge-wait">—</span>`;
+    const short = url.replace(/^https?:\/\//,'').replace(/\/$/,'');
+    return `<a href="${url}" target="_blank" title="${url}">${short.length>32 ? short.slice(0,32)+'…' : short}</a>`;
+  }
+
+  function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+  // ── Per-row ──────────────────────────────────────────────────────
   async function getWebsite(i) {
     const btn = document.getElementById(`btn-web-${i}`);
     const spin = document.getElementById(`spin-web-${i}`);
     btn.disabled = true; spin.style.display = 'inline-block';
-
+    document.getElementById(`cell-web-${i}`).innerHTML = `<span class="badge badge-wait">Searching…</span>`;
     try {
       const r = await fetch('/api/website', {
         method: 'POST', headers: {'Content-Type':'application/json'},
-        body: JSON.stringify({ programName: programs[i].name })
+        body: JSON.stringify({ programName: getName(i) })
       });
       const d = await r.json();
-      programs[i].website = d.website || null;
-      programs[i].error = d.error || null;
+      programs[i].website = d.website || '';
       document.getElementById(`cell-web-${i}`).innerHTML = d.website
-        ? linkCell(d.website)
-        : `<span class="badge badge-err">Not found</span>`;
-      // Enable residency button if website found
+        ? renderLink(d.website) : `<span class="badge badge-err">Not found</span>`;
       if (d.website) document.getElementById(`btn-res-${i}`).disabled = false;
-    } catch(e) {
+    } catch {
       document.getElementById(`cell-web-${i}`).innerHTML = `<span class="badge badge-err">Error</span>`;
     }
-
     btn.disabled = false; spin.style.display = 'none';
-    document.getElementById('btn-dl').style.display = 'inline-block';
   }
 
   async function getResidency(i) {
@@ -193,35 +257,51 @@
     const btn = document.getElementById(`btn-res-${i}`);
     const spin = document.getElementById(`spin-res-${i}`);
     btn.disabled = true; spin.style.display = 'inline-block';
-    document.getElementById(`cell-fm-${i}`).innerHTML = `<span class="empty">Searching…</span>`;
-    document.getElementById(`cell-apply-${i}`).innerHTML = `<span class="empty">Searching…</span>`;
-
+    document.getElementById(`cell-fm-${i}`).innerHTML = `<span class="badge badge-wait">Searching…</span>`;
+    const applyEl = document.getElementById(`apply-input-${i}`);
+    if (applyEl) applyEl.placeholder = 'Searching…';
     try {
       const r = await fetch('/api/residency', {
         method: 'POST', headers: {'Content-Type':'application/json'},
         body: JSON.stringify({ website: programs[i].website })
       });
       const d = await r.json();
-      programs[i].fmLink = d.fmLink || null;
-      programs[i].applyLink = d.applyLink || null;
+      programs[i].fmLink = d.fmLink || '';
+      programs[i].applyLink = d.applyLink || programs[i].applyLink;
       document.getElementById(`cell-fm-${i}`).innerHTML = d.fmLink
-        ? linkCell(d.fmLink)
-        : `<span class="badge badge-err">Not found</span>`;
-      document.getElementById(`cell-apply-${i}`).innerHTML = d.applyLink
-        ? linkCell(d.applyLink)
-        : `<span class="badge badge-err">Not found</span>`;
-    } catch(e) {
+        ? renderLink(d.fmLink) : `<span class="badge badge-err">Not found</span>`;
+      if (applyEl) {
+        applyEl.value = programs[i].applyLink;
+        applyEl.placeholder = 'Paste or auto-fetch…';
+        applyEl.classList.toggle('has-value', !!programs[i].applyLink);
+      }
+    } catch {
       document.getElementById(`cell-fm-${i}`).innerHTML = `<span class="badge badge-err">Error</span>`;
-      document.getElementById(`cell-apply-${i}`).innerHTML = `<span class="badge badge-err">Error</span>`;
+      if (applyEl) applyEl.placeholder = 'Paste or auto-fetch…';
     }
-
     btn.disabled = false; spin.style.display = 'none';
-    document.getElementById('btn-dl').style.display = 'inline-block';
   }
 
+  // ── Bulk ─────────────────────────────────────────────────────────
+  async function getWebsiteAll() {
+    for (let i = 0; i < programs.length; i++) {
+      if (!programs[i].website) await getWebsite(i);
+    }
+  }
+
+  async function getResidencyAll() {
+    for (let i = 0; i < programs.length; i++) {
+      if (programs[i].website && !programs[i].fmLink) await getResidency(i);
+    }
+  }
+
+  // ── Download ──────────────────────────────────────────────────────
   function downloadCSV() {
-    const rows = [['Program Name','Website','FM Residency Page','Apply Link']];
-    programs.forEach(p => rows.push([p.name, p.website||'', p.fmLink||'', p.applyLink||'']));
+    const headers = [...csvHeaders, 'Website', 'FM Residency Page', 'Apply Link'];
+    const rows = [headers, ...programs.map(p => [
+      ...csvHeaders.map((_, ci) => p._csv[ci] || ''),
+      p.website, p.fmLink, p.applyLink
+    ])];
     const csv = rows.map(r => r.map(c => `"${(c||'').replace(/"/g,'""')}"`).join(',')).join('\n');
     const a = document.createElement('a');
     a.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv);
