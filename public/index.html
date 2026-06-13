@@ -1,190 +1,103 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>FM Residency Finder</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      background: #eef2f7; min-height: 100vh;
-      display: flex; align-items: flex-start; justify-content: center;
-      padding: 40px 24px;
-    }
-    .card {
-      background: white; border-radius: 18px; padding: 40px;
-      width: 100%; max-width: 640px;
-      box-shadow: 0 8px 32px rgba(0,0,0,0.08);
-    }
-    .icon { font-size: 2rem; margin-bottom: 12px; }
-    h1 { font-size: 1.35rem; font-weight: 700; color: #1a202c; margin-bottom: 6px; }
-    .sub { color: #718096; font-size: 0.88rem; margin-bottom: 28px; line-height: 1.5; }
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: #eef2f7; min-height: 100vh; padding: 32px 24px; }
 
-    .tabs { display: flex; gap: 4px; margin-bottom: 24px; background: #f0f4f8; border-radius: 10px; padding: 4px; }
-    .tab { flex: 1; padding: 9px; border: none; background: none; border-radius: 7px; font-size: 0.88rem; font-weight: 600; color: #718096; cursor: pointer; transition: all 0.15s; }
-    .tab.active { background: white; color: #2b6cb0; box-shadow: 0 1px 4px rgba(0,0,0,0.1); }
-
-    .panel { display: none; }
-    .panel.active { display: block; }
-
-    label { display: block; font-size: 0.8rem; font-weight: 600; color: #4a5568; margin-bottom: 7px; letter-spacing: 0.04em; text-transform: uppercase; }
-    input[type="text"], input[type="url"] {
-      width: 100%; padding: 13px 15px;
-      border: 2px solid #e2e8f0; border-radius: 10px;
-      font-size: 0.95rem; color: #2d3748; outline: none; transition: border-color 0.15s;
-    }
-    input:focus { border-color: #4299e1; }
+    .top { max-width: 960px; margin: 0 auto 24px; }
+    h1 { font-size: 1.4rem; font-weight: 700; color: #1a202c; margin-bottom: 4px; }
+    .sub { color: #718096; font-size: 0.88rem; margin-bottom: 20px; }
 
     .upload-area {
-      border: 2px dashed #cbd5e0; border-radius: 10px;
-      padding: 32px; text-align: center; cursor: pointer;
+      border: 2px dashed #cbd5e0; border-radius: 12px; padding: 28px;
+      text-align: center; cursor: pointer; background: white;
       transition: border-color 0.15s; color: #718096;
     }
     .upload-area:hover, .upload-area.drag { border-color: #4299e1; background: #ebf8ff; }
-    .upload-area .upload-icon { font-size: 2rem; margin-bottom: 8px; }
+    .upload-area .uicon { font-size: 1.8rem; margin-bottom: 6px; }
     .upload-area p { font-size: 0.88rem; }
     .upload-area strong { color: #2b6cb0; }
-    .file-hint { font-size: 0.78rem; color: #a0aec0; margin-top: 10px; }
+    .hint { font-size: 0.76rem; color: #a0aec0; margin-top: 6px; }
 
-    .btn { margin-top: 14px; width: 100%; padding: 13px; background: #2b6cb0; color: white; border: none; border-radius: 10px; font-size: 1rem; font-weight: 600; cursor: pointer; transition: background 0.15s; display: flex; align-items: center; justify-content: center; gap: 8px; }
-    .btn:hover:not(:disabled) { background: #2c5282; }
-    .btn:disabled { background: #a0aec0; cursor: not-allowed; }
-    .btn.green { background: #276749; }
-    .btn.green:hover:not(:disabled) { background: #22543d; }
+    /* Table */
+    .table-wrap { max-width: 960px; margin: 0 auto; background: white; border-radius: 14px; box-shadow: 0 4px 20px rgba(0,0,0,0.07); overflow: hidden; display: none; }
+    .table-header { padding: 16px 20px; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; }
+    .table-header h2 { font-size: 0.95rem; font-weight: 700; color: #2d3748; }
+    .btn-dl { padding: 7px 14px; background: #276749; color: white; border: none; border-radius: 7px; font-size: 0.82rem; font-weight: 600; cursor: pointer; display: none; }
+    .btn-dl:hover { background: #22543d; }
 
-    .spinner { width: 16px; height: 16px; border: 2.5px solid rgba(255,255,255,0.4); border-top-color: white; border-radius: 50%; animation: spin 0.7s linear infinite; display: none; }
+    table { width: 100%; border-collapse: collapse; }
+    th { background: #f7fafc; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: #718096; padding: 10px 16px; text-align: left; border-bottom: 1px solid #e2e8f0; }
+    td { padding: 12px 16px; border-bottom: 1px solid #f0f4f8; vertical-align: middle; font-size: 0.85rem; color: #2d3748; }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: #f7fafc; }
+
+    .td-name { font-weight: 600; color: #1a202c; max-width: 200px; }
+    .td-link { max-width: 220px; }
+    .td-link a { color: #2b6cb0; font-size: 0.8rem; word-break: break-all; text-decoration: none; }
+    .td-link a:hover { text-decoration: underline; }
+    .td-link .empty { color: #cbd5e0; font-size: 0.78rem; }
+
+    .td-actions { white-space: nowrap; }
+    .btn { padding: 6px 12px; border: none; border-radius: 7px; font-size: 0.78rem; font-weight: 600; cursor: pointer; transition: all 0.15s; display: inline-flex; align-items: center; gap: 5px; }
+    .btn-web { background: #ebf8ff; color: #2b6cb0; }
+    .btn-web:hover:not(:disabled) { background: #bee3f8; }
+    .btn-res { background: #f0fff4; color: #276749; margin-left: 6px; }
+    .btn-res:hover:not(:disabled) { background: #c6f6d5; }
+    .btn:disabled { opacity: 0.45; cursor: not-allowed; }
+
+    .spin { width: 10px; height: 10px; border: 2px solid rgba(0,0,0,0.15); border-top-color: currentColor; border-radius: 50%; animation: spin 0.6s linear infinite; display: none; }
     @keyframes spin { to { transform: rotate(360deg); } }
 
-    .results { margin-top: 20px; display: flex; flex-direction: column; gap: 10px; }
-    .result-row { padding: 14px 16px; border-radius: 10px; display: none; }
-    .ok  { background: #f0fff4; border: 1.5px solid #9ae6b4; }
-    .err { background: #fff5f5; border: 1.5px solid #feb2b2; color: #742a2a; }
-    .tag { font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: #718096; margin-bottom: 5px; }
-    a { color: #2b6cb0; word-break: break-all; font-weight: 500; font-size: 0.9rem; }
-
-    .progress-wrap { margin-top: 20px; display: none; }
-    .progress-label { font-size: 0.85rem; color: #4a5568; margin-bottom: 8px; display: flex; justify-content: space-between; }
-    .progress-bar { background: #e2e8f0; border-radius: 99px; height: 8px; overflow: hidden; }
-    .progress-fill { background: #2b6cb0; height: 100%; border-radius: 99px; transition: width 0.3s; width: 0%; }
-    .batch-log { margin-top: 14px; background: #f7fafc; border-radius: 10px; padding: 12px 14px; max-height: 200px; overflow-y: auto; font-size: 0.82rem; color: #4a5568; line-height: 1.7; }
-    .log-ok { color: #276749; }
-    .log-err { color: #c53030; }
+    .badge { display: inline-block; padding: 2px 7px; border-radius: 99px; font-size: 0.7rem; font-weight: 600; }
+    .badge-ok { background: #c6f6d5; color: #276749; }
+    .badge-err { background: #fed7d7; color: #9b2c2c; }
   </style>
 </head>
 <body>
-<div class="card">
-  <div class="icon">🏥</div>
-  <h1>FM Residency Finder</h1>
-  <p class="sub">Enter a program name or upload a file — finds the hospital website, FM Residency page, and Apply link.</p>
 
-  <div class="tabs">
-    <button class="tab active" onclick="switchTab('single')">Single Search</button>
-    <button class="tab" onclick="switchTab('batch')">Upload File</button>
+<div class="top">
+  <h1>🏥 FM Residency Finder</h1>
+  <p class="sub">Upload a CSV of program names, then get the website and residency page for each.</p>
+
+  <div class="upload-area" id="upload-area"
+       onclick="document.getElementById('file-input').click()"
+       ondragover="event.preventDefault();this.classList.add('drag')"
+       ondragleave="this.classList.remove('drag')"
+       ondrop="handleDrop(event)">
+    <div class="uicon">📄</div>
+    <p><strong>Click to upload</strong> or drag and drop a CSV / TXT file</p>
+    <p class="hint">CSV with a "name", "program", or "hospital" column — or a plain TXT with one name per line</p>
   </div>
+  <input type="file" id="file-input" accept=".csv,.txt" style="display:none" onchange="handleFile(this.files[0])"/>
+</div>
 
-  <!-- Single -->
-  <div class="panel active" id="panel-single">
-    <label for="program">Program or Hospital Name</label>
-    <input id="program" type="text" placeholder="e.g. St. Mary's General Hospital Family Medicine" />
-    <button class="btn" id="btn-single" onclick="findSingle()">
-      <div class="spinner" id="spin-single"></div>
-      <span id="label-single">Search</span>
-    </button>
-    <div class="results">
-      <div class="result-row" id="row-website">
-        <div class="tag">Hospital Website</div>
-        <a id="link-website" href="#" target="_blank"></a>
-      </div>
-      <div class="result-row" id="row-fm">
-        <div class="tag">FM Residency Page</div>
-        <a id="link-fm" href="#" target="_blank"></a>
-      </div>
-      <div class="result-row" id="row-apply">
-        <div class="tag">How to Apply</div>
-        <a id="link-apply" href="#" target="_blank"></a>
-      </div>
-      <div class="result-row err" id="row-err">
-        <div class="tag">Error</div>
-        <span id="err-msg"></span>
-      </div>
-    </div>
+<div class="table-wrap" id="table-wrap">
+  <div class="table-header">
+    <h2 id="table-title">Programs</h2>
+    <button class="btn-dl" id="btn-dl" onclick="downloadCSV()">⬇ Download CSV</button>
   </div>
-
-  <!-- Batch -->
-  <div class="panel" id="panel-batch">
-    <label>Upload File</label>
-    <div class="upload-area" id="upload-area" onclick="document.getElementById('file-input').click()"
-         ondragover="event.preventDefault();this.classList.add('drag')"
-         ondragleave="this.classList.remove('drag')"
-         ondrop="handleDrop(event)">
-      <div class="upload-icon">📄</div>
-      <p><strong>Click to upload</strong> or drag and drop</p>
-      <p class="file-hint">CSV or TXT — one program/hospital name per line, or CSV with a "name" column</p>
-    </div>
-    <input type="file" id="file-input" accept=".csv,.txt" style="display:none" onchange="handleFile(this.files[0])" />
-    <div id="file-name" style="font-size:0.82rem;color:#718096;margin-top:8px;"></div>
-
-    <button class="btn" id="btn-batch" onclick="runBatch()" disabled>
-      <div class="spinner" id="spin-batch"></div>
-      <span id="label-batch">Process File</span>
-    </button>
-
-    <div class="progress-wrap" id="progress-wrap">
-      <div class="progress-label">
-        <span id="progress-text">Processing...</span>
-        <span id="progress-count"></span>
-      </div>
-      <div class="progress-bar"><div class="progress-fill" id="progress-fill"></div></div>
-      <div class="batch-log" id="batch-log"></div>
-    </div>
-
-    <button class="btn green" id="btn-download" style="display:none;margin-top:14px" onclick="downloadCSV()">
-      ⬇ Download Results CSV
-    </button>
-  </div>
+  <table>
+    <thead>
+      <tr>
+        <th>#</th>
+        <th>Program Name</th>
+        <th>Website</th>
+        <th>FM Residency Page</th>
+        <th>Apply Link</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody id="tbody"></tbody>
+  </table>
 </div>
 
 <script>
-  let parsedNames = [];
-  let batchResults = [];
-
-  function switchTab(tab) {
-    document.querySelectorAll('.tab').forEach((t,i) => t.classList.toggle('active', (i===0)===(tab==='single')));
-    document.getElementById('panel-single').classList.toggle('active', tab==='single');
-    document.getElementById('panel-batch').classList.toggle('active', tab==='batch');
-  }
-
-  async function findSingle() {
-    const name = document.getElementById('program').value.trim();
-    if (!name) return;
-    setLoading('single', true);
-    ['row-website','row-fm','row-apply','row-err'].forEach(id => document.getElementById(id).style.display='none');
-    try {
-      const d = await callFind(name);
-      if (d.website) showRow('row-website','link-website', d.website);
-      if (d.fmLink)  showRow('row-fm','link-fm', d.fmLink);
-      if (d.applyLink) showRow('row-apply','link-apply', d.applyLink);
-      if (d.error && !d.website) showErr(d.error);
-      else if (!d.fmLink) showErr('FM Residency page not found. Try adding more detail to the name.');
-    } catch(e) { showErr(e.message); }
-    setLoading('single', false);
-  }
-
-  function showRow(rowId, linkId, url) {
-    document.getElementById(linkId).href = url;
-    document.getElementById(linkId).textContent = url;
-    document.getElementById(rowId).style.display = 'block';
-  }
-  function showErr(msg) {
-    document.getElementById('err-msg').textContent = msg;
-    document.getElementById('row-err').style.display = 'block';
-  }
-  function setLoading(which, on) {
-    document.getElementById('btn-'+which).disabled = on;
-    document.getElementById('spin-'+which).style.display = on ? 'block' : 'none';
-    document.getElementById('label-'+which).textContent = on ? 'Searching...' : (which==='single' ? 'Search' : 'Process File');
-  }
+  let programs = []; // {name, website, fmLink, applyLink, error}
 
   function handleDrop(e) {
     e.preventDefault();
@@ -195,11 +108,11 @@
   function handleFile(file) {
     if (!file) return;
     const reader = new FileReader();
-    reader.onload = (e) => {
+    reader.onload = e => {
       const text = e.target.result;
-      parsedNames = parseNames(text, file.name.endsWith('.csv'));
-      document.getElementById('btn-batch').disabled = parsedNames.length === 0;
-      document.getElementById('file-name').textContent = `📎 ${file.name} — ${parsedNames.length} program(s) found`;
+      const names = parseNames(text, file.name.endsWith('.csv'));
+      programs = names.map(name => ({ name, website: null, fmLink: null, applyLink: null, error: null }));
+      renderTable();
     };
     reader.readAsText(file);
   }
@@ -213,70 +126,108 @@
     return lines.slice(1).map(l => l.split(',')[idx].replace(/['"]/g,'').trim()).filter(Boolean);
   }
 
-  async function runBatch() {
-    if (!parsedNames.length) return;
-    batchResults = [];
-    setLoading('batch', true);
-    document.getElementById('btn-download').style.display = 'none';
-    document.getElementById('progress-wrap').style.display = 'block';
-    document.getElementById('batch-log').innerHTML = '';
-
-    const total = parsedNames.length;
-    for (let i = 0; i < total; i++) {
-      const name = parsedNames[i];
-      updateProgress(i, total, name);
-      try {
-        const d = await callFind(name);
-        batchResults.push({ name, website: d.website||'', fmLink: d.fmLink||'', applyLink: d.applyLink||'', error: d.error||'' });
-        addLog(name, d.website, d.fmLink, d.applyLink, d.error);
-      } catch(e) {
-        batchResults.push({ name, website:'', fmLink:'', applyLink:'', error: e.message });
-        addLog(name, null, null, null, e.message);
-      }
-    }
-    updateProgress(total, total, 'Done');
-    setLoading('batch', false);
-    document.getElementById('label-batch').textContent = 'Process File';
-    document.getElementById('btn-download').style.display = 'block';
+  function renderTable() {
+    const tbody = document.getElementById('tbody');
+    tbody.innerHTML = '';
+    programs.forEach((p, i) => {
+      const tr = document.createElement('tr');
+      tr.id = `row-${i}`;
+      tr.innerHTML = `
+        <td style="color:#a0aec0;font-size:0.8rem">${i+1}</td>
+        <td class="td-name">${esc(p.name)}</td>
+        <td class="td-link" id="cell-web-${i}">${linkCell(p.website)}</td>
+        <td class="td-link" id="cell-fm-${i}">${linkCell(p.fmLink)}</td>
+        <td class="td-link" id="cell-apply-${i}">${linkCell(p.applyLink)}</td>
+        <td class="td-actions">
+          <button class="btn btn-web" id="btn-web-${i}" onclick="getWebsite(${i})">
+            <div class="spin" id="spin-web-${i}"></div>
+            🌐 Get Website
+          </button>
+          <button class="btn btn-res" id="btn-res-${i}" onclick="getResidency(${i})" ${p.website ? '' : 'disabled'}>
+            <div class="spin" id="spin-res-${i}"></div>
+            🔍 Get Residency Page
+          </button>
+        </td>`;
+      tbody.appendChild(tr);
+    });
+    document.getElementById('table-wrap').style.display = 'block';
+    document.getElementById('table-title').textContent = `${programs.length} Program${programs.length !== 1 ? 's' : ''}`;
   }
 
-  function updateProgress(done, total, current) {
-    const pct = Math.round((done/total)*100);
-    document.getElementById('progress-fill').style.width = pct+'%';
-    document.getElementById('progress-text').textContent = done < total ? `Processing: ${current}` : 'Complete!';
-    document.getElementById('progress-count').textContent = `${done} / ${total}`;
+  function linkCell(url) {
+    if (!url) return `<span class="empty">—</span>`;
+    const short = url.replace(/^https?:\/\//, '').replace(/\/$/, '');
+    return `<a href="${url}" target="_blank" title="${url}">${short.length > 35 ? short.slice(0,35)+'…' : short}</a>`;
   }
 
-  function addLog(name, website, fmLink, applyLink, error) {
-    const log = document.getElementById('batch-log');
-    if (error && !website) {
-      log.innerHTML += `<div class="log-err">✗ ${name} — ${error}</div>`;
-    } else {
-      log.innerHTML += `<div class="log-ok">✓ ${name} — Site: ${website?'✓':'✗'} | FM: ${fmLink?'✓':'✗'} | Apply: ${applyLink?'✓':'✗'}</div>`;
+  function esc(s) { return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+  async function getWebsite(i) {
+    const btn = document.getElementById(`btn-web-${i}`);
+    const spin = document.getElementById(`spin-web-${i}`);
+    btn.disabled = true; spin.style.display = 'inline-block';
+
+    try {
+      const r = await fetch('/api/website', {
+        method: 'POST', headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({ programName: programs[i].name })
+      });
+      const d = await r.json();
+      programs[i].website = d.website || null;
+      programs[i].error = d.error || null;
+      document.getElementById(`cell-web-${i}`).innerHTML = d.website
+        ? linkCell(d.website)
+        : `<span class="badge badge-err">Not found</span>`;
+      // Enable residency button if website found
+      if (d.website) document.getElementById(`btn-res-${i}`).disabled = false;
+    } catch(e) {
+      document.getElementById(`cell-web-${i}`).innerHTML = `<span class="badge badge-err">Error</span>`;
     }
-    log.scrollTop = log.scrollHeight;
+
+    btn.disabled = false; spin.style.display = 'none';
+    document.getElementById('btn-dl').style.display = 'inline-block';
+  }
+
+  async function getResidency(i) {
+    if (!programs[i].website) return;
+    const btn = document.getElementById(`btn-res-${i}`);
+    const spin = document.getElementById(`spin-res-${i}`);
+    btn.disabled = true; spin.style.display = 'inline-block';
+    document.getElementById(`cell-fm-${i}`).innerHTML = `<span class="empty">Searching…</span>`;
+    document.getElementById(`cell-apply-${i}`).innerHTML = `<span class="empty">Searching…</span>`;
+
+    try {
+      const r = await fetch('/api/residency', {
+        method: 'POST', headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({ website: programs[i].website })
+      });
+      const d = await r.json();
+      programs[i].fmLink = d.fmLink || null;
+      programs[i].applyLink = d.applyLink || null;
+      document.getElementById(`cell-fm-${i}`).innerHTML = d.fmLink
+        ? linkCell(d.fmLink)
+        : `<span class="badge badge-err">Not found</span>`;
+      document.getElementById(`cell-apply-${i}`).innerHTML = d.applyLink
+        ? linkCell(d.applyLink)
+        : `<span class="badge badge-err">Not found</span>`;
+    } catch(e) {
+      document.getElementById(`cell-fm-${i}`).innerHTML = `<span class="badge badge-err">Error</span>`;
+      document.getElementById(`cell-apply-${i}`).innerHTML = `<span class="badge badge-err">Error</span>`;
+    }
+
+    btn.disabled = false; spin.style.display = 'none';
+    document.getElementById('btn-dl').style.display = 'inline-block';
   }
 
   function downloadCSV() {
-    const rows = [['Program Name','Hospital Website','FM Residency Page','How to Apply','Error']];
-    batchResults.forEach(r => rows.push([r.name, r.website, r.fmLink, r.applyLink, r.error]));
+    const rows = [['Program Name','Website','FM Residency Page','Apply Link']];
+    programs.forEach(p => rows.push([p.name, p.website||'', p.fmLink||'', p.applyLink||'']));
     const csv = rows.map(r => r.map(c => `"${(c||'').replace(/"/g,'""')}"`).join(',')).join('\n');
     const a = document.createElement('a');
     a.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv);
     a.download = 'fm-residency-results.csv';
     a.click();
   }
-
-  async function callFind(programName) {
-    const r = await fetch('/api/find', {
-      method: 'POST',
-      headers: {'Content-Type':'application/json'},
-      body: JSON.stringify({ programName })
-    });
-    return r.json();
-  }
-
-  document.getElementById('program').addEventListener('keydown', e => { if (e.key==='Enter') findSingle(); });
 </script>
 </body>
 </html>
